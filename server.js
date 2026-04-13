@@ -9,7 +9,14 @@ app.use(express.static('public'));
 
 
 async function query(sql, params) {
-    const conn = await mysql.createConnection(process.env.DATABASE_URL);
+    const conn = await mysql.createConnection({
+        host: process.env.DB_HOST || 'monorail.proxy.rlwy.net',
+        port: parseInt(process.env.DB_PORT) || 31262,
+        user: process.env.DB_USER || 'root',
+        password: process.env.DB_PASSWORD || 'abVqrBVKMdlmobUwVrqdNHaYJfAWuRSI',
+        database: process.env.DB_NAME || 'railway',
+        ssl: { rejectUnauthorized: false }
+    });
     const [rows] = await conn.execute(sql, params);
     await conn.end();
     return rows;
