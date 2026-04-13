@@ -7,16 +7,16 @@ app.use(cors());
 app.use(express.json());
 app.use(express.static('public'));
 
-const config = {
-    host: process.env.DB_HOST || 'localhost',
-    port: process.env.DB_PORT || 3306,
-    user: process.env.DB_USER || 'root',
-    password: process.env.DB_PASSWORD || '',
-    database: process.env.DB_NAME || 'Farmacia'
-};
 
 async function query(sql, params) {
-    const conn = await mysql.createConnection(config);
+    const conn = await mysql.createConnection({
+        host: process.env.DB_HOST,
+        port: parseInt(process.env.DB_PORT),
+        user: process.env.DB_USER,
+        password: process.env.DB_PASSWORD,
+        database: process.env.DB_NAME,
+        ssl: { rejectUnauthorized: false }
+    });
     const [rows] = await conn.execute(sql, params);
     await conn.end();
     return rows;
