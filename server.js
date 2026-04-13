@@ -9,14 +9,7 @@ app.use(express.static('public'));
 
 
 async function query(sql, params) {
-    const conn = await mysql.createConnection({
-        host: process.env.DB_HOST,
-        port: parseInt(process.env.DB_PORT),
-        user: process.env.DB_USER,
-        password: process.env.DB_PASSWORD,
-        database: process.env.DB_NAME,
-        ssl: { rejectUnauthorized: false }
-    });
+    const conn = await mysql.createConnection(process.env.DATABASE_URL);
     const [rows] = await conn.execute(sql, params);
     await conn.end();
     return rows;
