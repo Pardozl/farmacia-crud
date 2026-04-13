@@ -1,0 +1,408 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Farmacia CRUD</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: Arial, sans-serif; background: #f0f2f5; }
+
+        header {
+            background: #2c7be5;
+            color: white;
+            padding: 16px 32px;
+            font-size: 22px;
+            font-weight: bold;
+        }
+
+        nav {
+            background: white;
+            display: flex;
+            gap: 8px;
+            padding: 12px 32px;
+            border-bottom: 2px solid #e0e0e0;
+        }
+
+        nav button {
+            padding: 8px 20px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            background: #e9ecef;
+            font-size: 14px;
+        }
+
+        nav button.active {
+            background: #2c7be5;
+            color: white;
+        }
+
+        .contenido { padding: 24px 32px; }
+
+        .seccion { display: none; }
+        .seccion.activa { display: block; }
+
+        h2 { margin-bottom: 16px; color: #333; }
+
+        .formulario {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 24px;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            box-shadow: 0 1px 4px rgba(0,0,0,0.1);
+        }
+
+        .formulario input {
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 6px;
+            font-size: 14px;
+            width: 100%;
+        }
+
+        .formulario .btn-guardar {
+            grid-column: span 2;
+            padding: 10px;
+            background: #2c7be5;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 15px;
+        }
+
+        .formulario .btn-guardar:hover { background: #1a68d1; }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            background: white;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 1px 4px rgba(0,0,0,0.1);
+        }
+
+        th {
+            background: #2c7be5;
+            color: white;
+            padding: 12px;
+            text-align: left;
+            font-size: 14px;
+        }
+
+        td {
+            padding: 10px 12px;
+            border-bottom: 1px solid #f0f0f0;
+            font-size: 14px;
+        }
+
+        tr:hover td { background: #f8f9ff; }
+
+        .btn-editar {
+            background: #f0ad4e;
+            color: white;
+            border: none;
+            padding: 5px 12px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-right: 4px;
+        }
+
+        .btn-eliminar {
+            background: #e74c3c;
+            color: white;
+            border: none;
+            padding: 5px 12px;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        .mensaje {
+            padding: 10px 16px;
+            border-radius: 6px;
+            margin-bottom: 16px;
+            display: none;
+            font-size: 14px;
+        }
+
+        .mensaje.exito { background: #d4edda; color: #155724; display: block; }
+        .mensaje.error { background: #f8d7da; color: #721c24; display: block; }
+    </style>
+</head>
+<body>
+
+<header>💊 Sistema de Farmacia</header>
+
+<nav>
+    <button class="active" onclick="mostrarSeccion('medicamentos', this)">Medicamentos</button>
+    <button onclick="mostrarSeccion('clientes', this)">Clientes</button>
+    <button onclick="mostrarSeccion('proveedores', this)">Proveedores</button>
+</nav>
+
+<div class="contenido">
+
+
+    <div id="sec-medicamentos" class="seccion activa">
+        <h2>Medicamentos</h2>
+        <div id="msg-medicamentos" class="mensaje"></div>
+        <div class="formulario">
+            <input type="hidden" id="med-id">
+            <input type="text" id="med-nombre" placeholder="Nombre">
+            <input type="text" id="med-descripcion" placeholder="Descripción">
+            <input type="text" id="med-categoria" placeholder="Categoría">
+            <input type="number" id="med-precio" placeholder="Precio">
+            <input type="number" id="med-stock" placeholder="Stock">
+            <input type="date" id="med-fecha" placeholder="Fecha vencimiento">
+            <input type="number" id="med-proveedor" placeholder="ID Proveedor">
+            <button class="btn-guardar" onclick="guardarMedicamento()">Guardar</button>
+        </div>
+        <table>
+            <thead>
+            <tr>
+                <th>ID</th><th>Nombre</th><th>Categoría</th>
+                <th>Precio</th><th>Stock</th><th>Acciones</th>
+            </tr>
+            </thead>
+            <tbody id="tabla-medicamentos"></tbody>
+        </table>
+    </div>
+
+
+    <div id="sec-clientes" class="seccion">
+        <h2>Clientes</h2>
+        <div id="msg-clientes" class="mensaje"></div>
+        <div class="formulario">
+            <input type="hidden" id="cli-id">
+            <input type="text" id="cli-nombre" placeholder="Nombre">
+            <input type="text" id="cli-telefono" placeholder="Teléfono">
+            <input type="email" id="cli-email" placeholder="Email">
+            <input type="text" id="cli-direccion" placeholder="Dirección">
+            <button class="btn-guardar" onclick="guardarCliente()">Guardar</button>
+        </div>
+        <table>
+            <thead>
+            <tr>
+                <th>ID</th><th>Nombre</th><th>Teléfono</th>
+                <th>Email</th><th>Dirección</th><th>Acciones</th>
+            </tr>
+            </thead>
+            <tbody id="tabla-clientes"></tbody>
+        </table>
+    </div>
+
+
+    <div id="sec-proveedores" class="seccion">
+        <h2>Proveedores</h2>
+        <div id="msg-proveedores" class="mensaje"></div>
+        <div class="formulario">
+            <input type="hidden" id="prov-id">
+            <input type="text" id="prov-nombre" placeholder="Nombre">
+            <input type="text" id="prov-telefono" placeholder="Teléfono">
+            <input type="email" id="prov-email" placeholder="Email">
+            <input type="text" id="prov-direccion" placeholder="Dirección">
+            <button class="btn-guardar" onclick="guardarProveedor()">Guardar</button>
+        </div>
+        <table>
+            <thead>
+            <tr>
+                <th>ID</th><th>Nombre</th><th>Teléfono</th>
+                <th>Email</th><th>Dirección</th><th>Acciones</th>
+            </tr>
+            </thead>
+            <tbody id="tabla-proveedores"></tbody>
+        </table>
+    </div>
+
+</div>
+
+<script>
+    const API = 'http://localhost:3000';
+
+    function mostrarSeccion(nombre, btn) {
+        document.querySelectorAll('.seccion').forEach(s => s.classList.remove('activa'));
+        document.querySelectorAll('nav button').forEach(b => b.classList.remove('active'));
+        document.getElementById('sec-' + nombre).classList.add('activa');
+        btn.classList.add('active');
+    }
+
+    function mostrarMensaje(id, texto, tipo) {
+        const el = document.getElementById(id);
+        el.textContent = texto;
+        el.className = 'mensaje ' + tipo;
+        setTimeout(() => el.className = 'mensaje', 3000);
+    }
+
+
+    async function cargarMedicamentos() {
+        const res = await fetch(API + '/medicamentos');
+        const datos = await res.json();
+        const tbody = document.getElementById('tabla-medicamentos');
+        tbody.innerHTML = datos.map(m => `
+        <tr>
+            <td>${m.id_medicamento}</td>
+            <td>${m.nombre}</td>
+            <td>${m.categoria}</td>
+            <td>$${m.precio}</td>
+            <td>${m.stock}</td>
+            <td>
+                <button class="btn-editar" onclick="editarMedicamento(${m.id_medicamento},'${m.nombre}','${m.descripcion}','${m.categoria}',${m.precio},${m.stock},'${m.fecha_vencimiento?.split('T')[0]}',${m.id_proveedor})">Editar</button>
+                <button class="btn-eliminar" onclick="eliminarMedicamento(${m.id_medicamento})">Eliminar</button>
+            </td>
+        </tr>
+    `).join('');
+    }
+
+    function editarMedicamento(id, nombre, desc, cat, precio, stock, fecha, prov) {
+        document.getElementById('med-id').value = id;
+        document.getElementById('med-nombre').value = nombre;
+        document.getElementById('med-descripcion').value = desc;
+        document.getElementById('med-categoria').value = cat;
+        document.getElementById('med-precio').value = precio;
+        document.getElementById('med-stock').value = stock;
+        document.getElementById('med-fecha').value = fecha;
+        document.getElementById('med-proveedor').value = prov;
+    }
+
+    async function guardarMedicamento() {
+        const id = document.getElementById('med-id').value;
+        const datos = {
+            nombre: document.getElementById('med-nombre').value,
+            descripcion: document.getElementById('med-descripcion').value,
+            categoria: document.getElementById('med-categoria').value,
+            precio: document.getElementById('med-precio').value,
+            stock: document.getElementById('med-stock').value,
+            fecha_vencimiento: document.getElementById('med-fecha').value,
+            id_proveedor: document.getElementById('med-proveedor').value
+        };
+        const metodo = id ? 'PUT' : 'POST';
+        const url = id ? `${API}/medicamentos/${id}` : `${API}/medicamentos`;
+        const res = await fetch(url, { method: metodo, headers: {'Content-Type':'application/json'}, body: JSON.stringify(datos) });
+        const resp = await res.json();
+        mostrarMensaje('msg-medicamentos', resp.mensaje, 'exito');
+        document.getElementById('med-id').value = '';
+        cargarMedicamentos();
+    }
+
+    async function eliminarMedicamento(id) {
+        if (!confirm('¿Eliminar este medicamento?')) return;
+        await fetch(`${API}/medicamentos/${id}`, { method: 'DELETE' });
+        mostrarMensaje('msg-medicamentos', 'Medicamento eliminado', 'exito');
+        cargarMedicamentos();
+    }
+
+
+    async function cargarClientes() {
+        const res = await fetch(API + '/clientes');
+        const datos = await res.json();
+        const tbody = document.getElementById('tabla-clientes');
+        tbody.innerHTML = datos.map(c => `
+        <tr>
+            <td>${c.id_cliente}</td>
+            <td>${c.nombre}</td>
+            <td>${c.telefono}</td>
+            <td>${c.email}</td>
+            <td>${c.direccion}</td>
+            <td>
+                <button class="btn-editar" onclick="editarCliente(${c.id_cliente},'${c.nombre}','${c.telefono}','${c.email}','${c.direccion}')">Editar</button>
+                <button class="btn-eliminar" onclick="eliminarCliente(${c.id_cliente})">Eliminar</button>
+            </td>
+        </tr>
+    `).join('');
+    }
+
+    function editarCliente(id, nombre, telefono, email, direccion) {
+        document.getElementById('cli-id').value = id;
+        document.getElementById('cli-nombre').value = nombre;
+        document.getElementById('cli-telefono').value = telefono;
+        document.getElementById('cli-email').value = email;
+        document.getElementById('cli-direccion').value = direccion;
+    }
+
+    async function guardarCliente() {
+        const id = document.getElementById('cli-id').value;
+        const datos = {
+            nombre: document.getElementById('cli-nombre').value,
+            telefono: document.getElementById('cli-telefono').value,
+            email: document.getElementById('cli-email').value,
+            direccion: document.getElementById('cli-direccion').value
+        };
+        const metodo = id ? 'PUT' : 'POST';
+        const url = id ? `${API}/clientes/${id}` : `${API}/clientes`;
+        const res = await fetch(url, { method: metodo, headers: {'Content-Type':'application/json'}, body: JSON.stringify(datos) });
+        const resp = await res.json();
+        mostrarMensaje('msg-clientes', resp.mensaje, 'exito');
+        document.getElementById('cli-id').value = '';
+        cargarClientes();
+    }
+
+    async function eliminarCliente(id) {
+        if (!confirm('¿Eliminar este cliente?')) return;
+        await fetch(`${API}/clientes/${id}`, { method: 'DELETE' });
+        mostrarMensaje('msg-clientes', 'Cliente eliminado', 'exito');
+        cargarClientes();
+    }
+
+
+    async function cargarProveedores() {
+        const res = await fetch(API + '/proveedores');
+        const datos = await res.json();
+        const tbody = document.getElementById('tabla-proveedores');
+        tbody.innerHTML = datos.map(p => `
+        <tr>
+            <td>${p.id_proveedor}</td>
+            <td>${p.nombre}</td>
+            <td>${p.telefono}</td>
+            <td>${p.email}</td>
+            <td>${p.direccion}</td>
+            <td>
+                <button class="btn-editar" onclick="editarProveedor(${p.id_proveedor},'${p.nombre}','${p.telefono}','${p.email}','${p.direccion}')">Editar</button>
+                <button class="btn-eliminar" onclick="eliminarProveedor(${p.id_proveedor})">Eliminar</button>
+            </td>
+        </tr>
+    `).join('');
+    }
+
+    function editarProveedor(id, nombre, telefono, email, direccion) {
+        document.getElementById('prov-id').value = id;
+        document.getElementById('prov-nombre').value = nombre;
+        document.getElementById('prov-telefono').value = telefono;
+        document.getElementById('prov-email').value = email;
+        document.getElementById('prov-direccion').value = direccion;
+    }
+
+    async function guardarProveedor() {
+        const id = document.getElementById('prov-id').value;
+        const datos = {
+            nombre: document.getElementById('prov-nombre').value,
+            telefono: document.getElementById('prov-telefono').value,
+            email: document.getElementById('prov-email').value,
+            direccion: document.getElementById('prov-direccion').value
+        };
+        const metodo = id ? 'PUT' : 'POST';
+        const url = id ? `${API}/proveedores/${id}` : `${API}/proveedores`;
+        const res = await fetch(url, { method: metodo, headers: {'Content-Type':'application/json'}, body: JSON.stringify(datos) });
+        const resp = await res.json();
+        mostrarMensaje('msg-proveedores', resp.mensaje, 'exito');
+        document.getElementById('prov-id').value = '';
+        cargarProveedores();
+    }
+
+    async function eliminarProveedor(id) {
+        if (!confirm('¿Eliminar este proveedor?')) return;
+        await fetch(`${API}/proveedores/${id}`, { method: 'DELETE' });
+        mostrarMensaje('msg-proveedores', 'Proveedor eliminado', 'exito');
+        cargarProveedores();
+    }
+
+
+    cargarMedicamentos();
+    cargarClientes();
+    cargarProveedores();
+</script>
+
+</body>
+</html>
