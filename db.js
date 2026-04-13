@@ -1,28 +1,11 @@
-const sql = require('mssql');
+const mysql = require('mysql2/promise');
 
 const config = {
-    server: 'localhost',
-    port: 1433,
-    database: 'Farmacia',
-    user: 'farmacia_user',
-    password: '12345',
-    options: {
-        trustServerCertificate: true,
-        encrypt: false,
-        enableArithAbort: true
-    }
+    host: process.env.DB_HOST,
+    port: process.env.DB_PORT,
+    user: process.env.DB_USER,
+    password: process.env.DB_PASSWORD,
+    database: process.env.DB_NAME
 };
 
-async function conectar() {
-    try {
-        const pool = await sql.connect(config);
-        console.log('✅ Conectado correctamente');
-        return pool;
-    } catch (err) {
-        console.error('❌ Error:', err.message);
-    }
-}
-
-conectar();
-
-module.exports = { sql, config };
+module.exports = config;
