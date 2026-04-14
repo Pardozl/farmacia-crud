@@ -1,3 +1,5 @@
+require('dotenv').config();
+
 const express = require('express');
 const cors = require('cors');
 const mysql = require('mysql2/promise');
@@ -7,18 +9,17 @@ app.use(cors());
 app.use(express.json());
 app.use(express.static('public'));
 
+const pool = mysql.createPool({
+    host: process.env.DB_HOST,
+    port: parseInt(process.env.DB_PORT),
+    user: process.env.DB_USER,
+    password: process.env.DB_PASSWORD,
+    database: process.env.DB_NAME,
+    ssl: { rejectUnauthorized: false }
+});
 
 async function query(sql, params) {
-    const conn = await mysql.createConnection({
-        host: process.env.DB_HOST || 'monorail.proxy.rlwy.net',
-        port: parseInt(process.env.DB_PORT) || 31262,
-        user: process.env.DB_USER || 'root',
-        password: process.env.DB_PASSWORD || 'abVqrBVKMdlmobUwVrqdNHaYJfAWuRSI',
-        database: process.env.DB_NAME || 'railway',
-        ssl: { rejectUnauthorized: false }
-    });
-    const [rows] = await conn.execute(sql, params);
-    await conn.end();
+    const [rows] = await pool.execute(sql, params);
     return rows;
 }
 
@@ -30,14 +31,34 @@ app.get('/medicamentos', async (req, res) => {
     } catch (err) { res.status(500).json({ error: err.message }); }
 });
 
+
 app.post('/medicamentos', async (req, res) => {
     const { nombre, descripcion, categoria, precio, stock, fecha_vencimiento, id_proveedor } = req.body;
+
+
+    if (!nombre || !precio || !stock || !id_proveedor) {
+        return res.status(400).json({ error: 'Faltan campos obligatorios (nombre, precio, stock, id_proveedor)' });
+    }
+
+    if (isNaN(precio) || precio <= 0) {
+        return res.status(400).json({ error: 'El precio debe ser un número mayor a 0' });
+    }
+
+    if (!Number.isInteger(stock) || stock < 0) {
+        return res.status(400).json({ error: 'El stock debe ser un número entero no negativo' });
+    }
+
     try {
-        await query('INSERT INTO Medicamento (nombre, descripcion, categoria, precio, stock, fecha_vencimiento, id_proveedor) VALUES (?,?,?,?,?,?,?)',
-            [nombre, descripcion, categoria, precio, stock, fecha_vencimiento, id_proveedor]);
+        await query(
+            'INSERT INTO Medicamento (nombre, descripcion, categoria, precio, stock, fecha_vencimiento, id_proveedor) VALUES (?,?,?,?,?,?,?)',
+            [nombre, descripcion, categoria, precio, stock, fecha_vencimiento, id_proveedor]
+        );
         res.json({ mensaje: 'Medicamento creado correctamente' });
-    } catch (err) { res.status(500).json({ error: err.message }); }
+    } catch (err) {
+        res.status(500).json({ error: 'Error interno del servidor' });
+    }
 });
+
 
 app.put('/medicamentos/:id', async (req, res) => {
     const { nombre, descripcion, categoria, precio, stock, fecha_vencimiento } = req.body;
@@ -124,5 +145,5 @@ app.delete('/proveedores/:id', async (req, res) => {
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
-    console.log(`🚀 Servidor corriendo en puerto ${PORT}`);
+    console.log(`Servidor corriendo en puerto ${PORT}`);
 });
